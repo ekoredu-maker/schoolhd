@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>오늘 알림장</title>
+<title>오늘의 알림장</title>
 <style>
   :root{
     --bg:#f3f6fb;
@@ -172,10 +172,10 @@
   <section class="card">
     <div class="top">
       <div>
-        <h1 class="title">오늘 알림장</h1>
-        <p class="sub">날짜는 자동 계산되며 메인 화면에는 숨겨집니다. 완료 시 확인 화면에서 한 번만 보여집니다.</p>
+        <h1 class="title">오늘의 알림장</h1>
+        <p class="sub"></p>
       </div>
-      <div class="badge">설치 없이 바로 실행</div>
+      <div class="badge"></div>
     </div>
 
     <input id="hiddenDateKey" class="hidden-field" type="hidden" />
@@ -184,8 +184,8 @@
     <div class="grid three" style="margin-top:12px;">
       <div class="field">
         <label class="label" for="chatTarget">카카오톡 전송 대상 메모</label>
-        <input id="chatTarget" type="text" placeholder="예: 3학년 2반 학부모방" maxlength="60" />
-        <div class="hint">직접 전송 대상 메모입니다. 브라우저 보안상 특정 대화방 자동 지정 전송은 불가합니다.</div>
+        <input id="chatTarget" type="text" placeholder="예: 1학년 2반 학부모방" maxlength="60" />
+        <div class="hint"></div>
       </div>
       <div class="field">
         <label class="label" for="recorderInput">누가 기록하기</label>
@@ -193,7 +193,7 @@
           <input id="recorderInput" type="text" placeholder="예: 1번, 2번, 모둠장, 홍길동" maxlength="30" />
           <button type="button" class="soft" id="addRecorderBtn">기록자 추가</button>
         </div>
-        <div class="hint">기록자 목록을 저장해 두고 선택할 수 있습니다. 기록자는 공유문구에 넣지 않고 내부 저장용으로만 사용합니다.</div>
+        <div class="hint"></div>
       </div>
       <div class="field">
         <label class="label" for="valueExtra">가치 사전 추가 메모</label>
@@ -215,8 +215,7 @@
     </div>
 
     <div class="mini-note">
-      주말과 등록된 법정공휴일은 자동 생성 날짜에서 제외합니다. 현재 파일에는 2026년 대한민국 공휴일 기준값이 들어 있으며,
-      아래 코드의 <strong>HOLIDAYS_BY_YEAR</strong> 배열만 수정하면 다른 연도에도 그대로 사용할 수 있습니다.
+      <strong>HOLIDAYS_BY_YEAR</strong> 배열만 수정하면 다른 연도에도 그대로 사용할 수 있습니다.
     </div>
 
     <div id="statusMessage" class="status"></div>
@@ -299,7 +298,7 @@
     <div id="historyList" class="history-list"></div>
   </section>
 
-  <div class="footer">© 2026 남현정. All rights reserved.</div>
+  <div class="footer">남현정©2026 All rights reserved.</div>
 </div>
 
 <div id="confirmModal" class="modal" aria-hidden="true">
