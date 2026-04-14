@@ -1,1 +1,1609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>오늘 알림장</title>
+<style>
+  :root{
+    --bg:#f3f6fb;
+    --card:#ffffff;
+    --line:#d9e2ec;
+    --text:#1f2937;
+    --muted:#64748b;
+    --primary:#2563eb;
+    --primary-soft:#dbeafe;
+    --danger:#dc2626;
+    --success:#15803d;
+    --warn:#b45309;
+    --chalk:#1d4b42;
+    --chalk-text:#ffffff;
+    --chalk-line:rgba(255,255,255,.08);
+    --shadow:0 10px 24px rgba(15,23,42,.08);
+    --radius:18px;
+  }
 
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg);color:var(--text);
+    font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  }
+  body{line-height:1.5;}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  h1,h2,h3,p{margin:0;}
+  .top{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:12px;flex-wrap:wrap;margin-bottom:10px;
+  }
+  .title{font-size:clamp(1.4rem,3vw,2rem);font-weight:800;}
+  .sub{color:var(--muted);font-size:.94rem;margin-top:4px;}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 10px;border-radius:999px;
+    background:#eff6ff;color:#1d4ed8;font-size:.82rem;font-weight:700;
+  }
+
+  .grid{display:grid;gap:12px;}
+  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .grid.three{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .label{font-weight:800;font-size:.96rem;}
+  .hint{font-size:.86rem;color:var(--muted);}
+
+  input[type="text"], textarea, select, input[type="color"]{
+    width:100%;padding:12px 14px;border:1px solid var(--line);
+    border-radius:14px;background:#fff;color:var(--text);
+    font:inherit;outline:none;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+  }
+  input[type="color"]{
+    padding:6px;height:48px;cursor:pointer;
+  }
+  textarea{resize:vertical;min-height:86px;}
+
+  .section-head{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:10px;flex-wrap:wrap;margin-bottom:10px;
+  }
+  .section-title{font-size:1.08rem;font-weight:800;}
+  .actions,.section-actions,.chips,.modal-actions{
+    display:flex;gap:8px;flex-wrap:wrap;
+  }
+
+  button{
+    appearance:none;border:none;border-radius:12px;
+    padding:11px 14px;font:inherit;font-weight:800;
+    cursor:pointer;background:#e2e8f0;color:var(--text);
+  }
+  button.primary{background:var(--primary);color:#fff;}
+  button.soft{background:var(--primary-soft);color:#1d4ed8;}
+  button.danger{background:#fee2e2;color:#991b1b;}
+  button.ghost{background:#f8fafc;border:1px solid var(--line);}
+  button:disabled{opacity:.55;cursor:not-allowed;}
+
+  .chips button{
+    padding:8px 12px;border-radius:999px;background:#fff;border:1px solid var(--line);
+  }
+  .chips button.active{
+    background:#eaf2ff;border-color:#93c5fd;color:#1d4ed8;
+  }
+
+  .item-box{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:12px;
+    background:#fcfdff;
+  }
+  .item-top{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:10px;flex-wrap:wrap;margin-bottom:8px;
+  }
+  .item-controls{
+    display:grid;gap:10px;grid-template-columns:1fr 96px;
+  }
+
+  .mini-note{
+    margin-top:10px;padding:12px 14px;background:#fff7ed;
+    border:1px solid #fed7aa;border-radius:14px;color:#9a3412;font-size:.9rem;
+  }
+  .status{margin-top:10px;font-size:.92rem;}
+  .status.ok{color:var(--success);}
+  .status.warn{color:var(--warn);}
+  .status.error{color:var(--danger);}
+
+  .value-card{
+    background:#f8fbff;border:1px dashed #bfdbfe;
+    border-radius:16px;padding:14px;display:grid;gap:10px;
+  }
+
+  /* 화면 미리보기용 칠판 */
+  .chalk-preview{
+    background:
+      linear-gradient(rgba(255,255,255,.02), rgba(255,255,255,.02)),
+      repeating-linear-gradient(0deg, transparent 0 28px, var(--chalk-line) 28px 29px),
+      var(--chalk);
+    color:var(--chalk-text);
+    border-radius:18px;
+    padding:18px;
+    min-height:240px;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.05);
+  }
+  .chalk-title{font-size:1.16rem;font-weight:800;margin-bottom:14px;}
+  .chalk-section{margin-bottom:14px;}
+  .chalk-section-title{font-weight:800;margin-bottom:6px;}
+  .chalk-line-item{margin:3px 0;white-space:pre-wrap;word-break:break-word;}
+  .chalk-muted{opacity:.85;}
+
+  .history-list{display:grid;gap:12px;}
+  .history-item{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px;
+    background:#fff;
+  }
+  .history-top{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:10px;flex-wrap:wrap;margin-bottom:8px;
+  }
+  .history-title{font-weight:800;}
+  .history-meta{font-size:.86rem;color:var(--muted);margin-top:4px;}
+  .history-snippet{
+    white-space:pre-wrap;background:#f8fafc;border-radius:12px;
+    padding:10px;font-size:.92rem;color:#334155;max-height:130px;overflow:auto;
+  }
+  .empty{
+    padding:14px;border:1px dashed var(--line);
+    border-radius:16px;color:var(--muted);background:#fafcff;
+  }
+
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:.9rem;padding:10px 4px 24px;
+  }
+  .hidden-field{display:none;}
+
+  /* 완료 확인 / 이미지 미리보기 모달 */
+  .modal{
+    position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+    z-index:9999;background:rgba(15,23,42,.58);padding:16px;
+  }
+  .modal.open{display:flex;}
+  .modal-card{
+    width:min(980px,100%);
+    max-height:94vh;
+    overflow:auto;
+    background:#fff;border-radius:22px;
+    box-shadow:0 24px 56px rgba(15,23,42,.28);
+    padding:16px;
+  }
+  .modal-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:10px;flex-wrap:wrap;margin-bottom:12px;
+  }
+  .modal-title{font-size:1.14rem;font-weight:800;}
+  .image-area{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:#f8fafc;
+    padding:12px;
+    overflow:auto;
+  }
+  .generated-image{
+    display:block;
+    width:100%;
+    max-width:100%;
+    height:auto;
+    border-radius:14px;
+    background:#fff;
+  }
+  .modal-note{
+    margin-top:10px;
+    font-size:.9rem;color:var(--muted);
+  }
+
+  @media (max-width:780px){
+    .grid.two,.grid.three,.item-controls{grid-template-columns:1fr;}
+    .card{padding:14px;}
+    button{width:100%;}
+    .actions button,.section-actions button,.modal-actions button{width:auto;flex:1 1 140px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="card">
+    <div class="top">
+      <div>
+        <h1 class="title">오늘 알림장</h1>
+        <p class="sub">메인 화면에는 날짜를 숨기고, 완성된 칠판 이미지를 PNG로 저장하거나 공유할 수 있습니다.</p>
+      </div>
+      <div class="badge">설치 없이 바로 실행</div>
+    </div>
+
+    <!-- 날짜는 자동 계산되지만 화면에는 숨김 -->
+    <input id="hiddenDateKey" class="hidden-field" type="hidden" />
+    <input id="hiddenDateTitle" class="hidden-field" type="hidden" />
+
+    <div class="grid three" style="margin-top:12px;">
+      <div class="field">
+        <label class="label" for="chatTarget">카카오톡 전송 대상 메모</label>
+        <input id="chatTarget" type="text" placeholder="예: 3학년 2반 학부모방" maxlength="60" />
+        <div class="hint">저장 목록 확인용 메모입니다.</div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="recorderInput">누가 기록하기</label>
+        <div class="grid two">
+          <input id="recorderInput" type="text" placeholder="예: 1번, 모둠장, 홍길동" maxlength="30" />
+          <button type="button" class="soft" id="addRecorderBtn">기록자 추가</button>
+        </div>
+        <div class="hint">기록자는 내부 기록용이며 이미지에는 넣지 않습니다.</div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="valueExtra">가치 사전 추가 메모</label>
+        <input id="valueExtra" type="text" placeholder="예: 오늘은 차례 지키기를 함께 실천해요." maxlength="120" />
+        <div class="hint">필요하면 한 줄 안내를 더 적을 수 있습니다.</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:12px;">
+      <label class="label">기록자 선택</label>
+      <div id="recorderChipArea" class="chips"></div>
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button type="button" class="ghost" id="resetBtn">새 알림장 시작</button>
+      <button type="button" class="soft" id="quickDownloadBtn">현재 이미지 저장</button>
+      <button type="button" class="soft" id="quickShareBtn">현재 이미지 공유</button>
+      <button type="button" class="primary" id="completeBtn">완료 후 이미지 확인</button>
+    </div>
+
+    <div class="mini-note">
+      주말과 법정공휴일은 자동 생성 날짜에서 제외됩니다. 모바일의 공유창이 지원되면 칠판 이미지를 바로 공유할 수 있고,
+      지원되지 않는 환경에서는 PNG 파일로 저장됩니다.
+    </div>
+
+    <div id="statusMessage" class="status"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2 class="section-title">1. 오늘 공부한 내용</h2>
+      <div class="section-actions">
+        <button type="button" class="soft" id="addStudyBtn">교시 추가</button>
+      </div>
+    </div>
+    <div id="studyContainer" class="grid"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2 class="section-title">2. 과제</h2>
+      <div class="section-actions">
+        <button type="button" class="soft" id="addHomeworkBtn">소항목 추가</button>
+      </div>
+    </div>
+    <div id="homeworkContainer" class="grid"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2 class="section-title">3. 안내</h2>
+      <div class="section-actions">
+        <button type="button" class="soft" id="addNoticeBtn">소항목 추가</button>
+      </div>
+    </div>
+    <div id="noticeContainer" class="grid"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2 class="section-title">4. 가치 사전</h2>
+    </div>
+
+    <div class="grid two">
+      <div class="field">
+        <label class="label" for="valueWord">가치 낱말 선택</label>
+        <select id="valueWord"></select>
+        <div class="hint">선택한 가치 낱말의 뜻과 실천 방법이 자동 표시됩니다.</div>
+      </div>
+      <div class="field">
+        <label class="label">안내</label>
+        <div class="hint" style="padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fafcff;">
+          화면 미리보기에는 날짜를 숨기고, 실제 PNG 이미지에는 날짜(요일) 알림장이 한 번만 표시됩니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="value-card" style="margin-top:12px;">
+      <div>
+        <div class="label">뜻</div>
+        <div id="valueMeaning">-</div>
+      </div>
+      <div>
+        <div class="label">실천 방법</div>
+        <div id="valuePractice">-</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2 class="section-title">화면 미리보기</h2>
+      <div class="hint">실제 저장 이미지는 아래 내용으로 다시 그려집니다.</div>
+    </div>
+    <div id="previewBoard" class="chalk-preview"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2 class="section-title">저장 목록</h2>
+      <div class="hint">텍스트 데이터만 저장하고, 이미지는 필요할 때마다 다시 생성합니다.</div>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </section>
+
+  <div class="footer">© 2026 남현정. All rights reserved.</div>
+</div>
+
+<!-- 완료 후 이미지 확인 모달 -->
+<div id="previewModal" class="modal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <div>
+        <div id="modalTitle" class="modal-title">완성된 알림장 이미지 확인</div>
+        <div class="hint">아래 이미지를 저장하거나 공유할 수 있습니다.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="modalCloseBtn">닫기</button>
+        <button type="button" class="soft" id="modalDownloadBtn">이미지 저장</button>
+        <button type="button" class="soft" id="modalShareBtn">이미지 공유</button>
+        <button type="button" class="primary" id="modalSaveBtn">저장하기</button>
+      </div>
+    </div>
+
+    <div class="image-area">
+      <img id="modalImage" class="generated-image" alt="알림장 이미지 미리보기" />
+    </div>
+    <div class="modal-note">카카오톡 직접 대상 지정 전송은 불가하며, 모바일 공유창에서 카카오톡을 선택하는 방식입니다.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* =========================
+     사용자가 수정하기 쉬운 기본 설정
+     ========================= */
+  const STORAGE_KEYS = {
+    draft: 'today_notice_draft_v4',
+    history: 'today_notice_history_v4',
+    recorders: 'today_notice_recorders_v4'
+  };
+
+  const DEFAULT_TEXT_COLOR = '#ffffff';
+  const KOREAN_INDEX = ['가','나','다','라','마','바','사','아','자','차','카','타','파','하'];
+
+  /*
+    법정공휴일 제외 목록
+    다른 연도에 쓰려면 YYYY-MM-DD 형식으로 추가/수정하세요.
+  */
+  const HOLIDAYS_BY_YEAR = {
+    "2026": [
+      "2026-01-01",
+      "2026-02-16","2026-02-17","2026-02-18",
+      "2026-03-01","2026-03-02",
+      "2026-05-05",
+      "2026-05-24","2026-05-25",
+      "2026-06-06",
+      "2026-08-15","2026-08-17",
+      "2026-09-24","2026-09-25","2026-09-26",
+      "2026-10-03","2026-10-05","2026-10-09",
+      "2026-12-25"
+    ]
+  };
+
+  /*
+    가치 사전 데이터
+    필요하면 낱말/뜻/실천 방법을 자유롭게 수정할 수 있습니다.
+  */
+  const VALUE_DICTIONARY = [
+    { word:'존중', meaning:'상대방의 생각과 감정을 소중히 여기며 예의를 지키는 태도', practice:'끝까지 말 듣기, 놀리지 않기, 부드럽게 말하기' },
+    { word:'배려', meaning:'다른 사람의 입장과 상황을 헤아려 도와주려는 마음', practice:'힘든 친구 먼저 돕기, 차례 양보하기, 함께 챙기기' },
+    { word:'책임', meaning:'자신이 맡은 일과 약속을 끝까지 해내려는 태도', practice:'준비물 챙기기, 맡은 역할 마무리하기, 실수 고치기' },
+    { word:'정직', meaning:'거짓 없이 바르고 솔직하게 행동하는 마음', practice:'사실대로 말하기, 남의 물건 허락 없이 쓰지 않기, 잘못 숨기지 않기' },
+    { word:'협력', meaning:'서로 힘을 모아 함께 좋은 결과를 만드는 태도', practice:'역할 나누기, 친구 의견 존중하기, 함께 문제 해결하기' },
+    { word:'절제', meaning:'하고 싶은 마음을 조절하며 바르게 행동하는 힘', practice:'차례 기다리기, 수업 중 집중하기, 감정 가라앉히기' },
+    { word:'용기', meaning:'어렵고 두려워도 옳은 일을 하려는 마음', practice:'모르는 것 질문하기, 미안하다고 말하기, 도움 요청하기' },
+    { word:'감사', meaning:'주변의 도움과 일상에 고마움을 느끼는 마음', practice:'고맙다고 표현하기, 도움받은 일 떠올리기, 친절 기억하기' }
+  ];
+
+  const el = {
+    hiddenDateKey: document.getElementById('hiddenDateKey'),
+    hiddenDateTitle: document.getElementById('hiddenDateTitle'),
+    chatTarget: document.getElementById('chatTarget'),
+    recorderInput: document.getElementById('recorderInput'),
+    addRecorderBtn: document.getElementById('addRecorderBtn'),
+    recorderChipArea: document.getElementById('recorderChipArea'),
+    valueExtra: document.getElementById('valueExtra'),
+    studyContainer: document.getElementById('studyContainer'),
+    homeworkContainer: document.getElementById('homeworkContainer'),
+    noticeContainer: document.getElementById('noticeContainer'),
+    valueWord: document.getElementById('valueWord'),
+    valueMeaning: document.getElementById('valueMeaning'),
+    valuePractice: document.getElementById('valuePractice'),
+    previewBoard: document.getElementById('previewBoard'),
+    historyList: document.getElementById('historyList'),
+    statusMessage: document.getElementById('statusMessage'),
+    addStudyBtn: document.getElementById('addStudyBtn'),
+    addHomeworkBtn: document.getElementById('addHomeworkBtn'),
+    addNoticeBtn: document.getElementById('addNoticeBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    quickDownloadBtn: document.getElementById('quickDownloadBtn'),
+    quickShareBtn: document.getElementById('quickShareBtn'),
+    completeBtn: document.getElementById('completeBtn'),
+
+    previewModal: document.getElementById('previewModal'),
+    modalImage: document.getElementById('modalImage'),
+    modalCloseBtn: document.getElementById('modalCloseBtn'),
+    modalDownloadBtn: document.getElementById('modalDownloadBtn'),
+    modalShareBtn: document.getElementById('modalShareBtn'),
+    modalSaveBtn: document.getElementById('modalSaveBtn')
+  };
+
+  let autoSaveTimer = null;
+  let selectedRecorder = '';
+  let modalDraftCache = null;
+  let modalMode = 'current';
+  let modalObjectUrl = '';
+
+  function setStatus(message, type){
+    el.statusMessage.textContent = message || '';
+    el.statusMessage.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  function safeJsonParse(text, fallback){
+    try { return JSON.parse(text); }
+    catch(error){ return fallback; }
+  }
+
+  function readStorage(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw === null ? fallback : safeJsonParse(raw, fallback);
+    }catch(error){
+      setStatus('브라우저 저장소를 읽지 못했습니다.', 'error');
+      return fallback;
+    }
+  }
+
+  function writeStorage(key, value){
+    try{
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    }catch(error){
+      setStatus('저장에 실패했습니다. 브라우저 저장 공간 또는 권한을 확인해 주세요.', 'error');
+      return false;
+    }
+  }
+
+  function escapeHtml(value){
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function normalizeText(value){
+    return typeof value === 'string' ? value : '';
+  }
+
+  function normalizeColor(color){
+    const text = normalizeText(color).trim();
+    return /^#[0-9a-fA-F]{6}$/.test(text) ? text : DEFAULT_TEXT_COLOR;
+  }
+
+  function pad(num){
+    return String(num).padStart(2, '0');
+  }
+
+  function dateToKey(date){
+    return date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate());
+  }
+
+  function isWeekend(date){
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  }
+
+  function isHoliday(date){
+    const year = String(date.getFullYear());
+    const key = dateToKey(date);
+    const list = HOLIDAYS_BY_YEAR[year] || [];
+    return list.includes(key);
+  }
+
+  function getNextValidSchoolDate(baseDate){
+    const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+    let guard = 0;
+    while((isWeekend(d) || isHoliday(d)) && guard < 370){
+      d.setDate(d.getDate() + 1);
+      guard += 1;
+    }
+    return d;
+  }
+
+  function getAutoDateMeta(){
+    const weekdays = ['일','월','화','수','목','금','토'];
+    const target = getNextValidSchoolDate(new Date());
+    return {
+      dateKey: dateToKey(target),
+      dateTitle: `${target.getMonth()+1}월 ${target.getDate()}일(${weekdays[target.getDay()]}) 알림장`
+    };
+  }
+
+  function getKoreanLabel(index){
+    return KOREAN_INDEX[index] || String(index + 1);
+  }
+
+  function defaultStudyItems(){
+    return Array.from({length:5}, function(){
+      return { text:'', color:DEFAULT_TEXT_COLOR };
+    });
+  }
+
+  function defaultListItems(){
+    return [{ text:'', color:DEFAULT_TEXT_COLOR }];
+  }
+
+  function defaultDraft(){
+    const meta = getAutoDateMeta();
+    return {
+      dateKey: meta.dateKey,
+      dateTitle: meta.dateTitle,
+      chatTarget: '',
+      recorder: '',
+      studies: defaultStudyItems(),
+      homework: defaultListItems(),
+      notices: defaultListItems(),
+      valueWord: VALUE_DICTIONARY[0] ? VALUE_DICTIONARY[0].word : '',
+      valueExtra: ''
+    };
+  }
+
+  function normalizeList(list, fallbackFactory){
+    if(!Array.isArray(list) || list.length === 0) return fallbackFactory();
+    return list.map(function(item){
+      return {
+        text: normalizeText(item && item.text).trim(),
+        color: normalizeColor(item && item.color)
+      };
+    });
+  }
+
+  function normalizeDraft(data){
+    const fallback = defaultDraft();
+    if(!data || typeof data !== 'object') return fallback;
+
+    return {
+      dateKey: normalizeText(data.dateKey) || fallback.dateKey,
+      dateTitle: normalizeText(data.dateTitle) || fallback.dateTitle,
+      chatTarget: normalizeText(data.chatTarget),
+      recorder: normalizeText(data.recorder),
+      studies: normalizeList(data.studies, defaultStudyItems),
+      homework: normalizeList(data.homework, defaultListItems),
+      notices: normalizeList(data.notices, defaultListItems),
+      valueWord: VALUE_DICTIONARY.some(function(item){ return item.word === data.valueWord; }) ? data.valueWord : fallback.valueWord,
+      valueExtra: normalizeText(data.valueExtra)
+    };
+  }
+
+  function getRecorderList(){
+    const list = readStorage(STORAGE_KEYS.recorders, ['1번','2번','3번']);
+    if(!Array.isArray(list)) return ['1번','2번','3번'];
+    const cleaned = Array.from(new Set(list.map(function(item){
+      return normalizeText(item).trim();
+    }).filter(Boolean)));
+    return cleaned.length ? cleaned : ['1번','2번','3번'];
+  }
+
+  function saveRecorderList(list){
+    const cleaned = Array.from(new Set(list.map(function(item){
+      return normalizeText(item).trim();
+    }).filter(Boolean)));
+    return writeStorage(STORAGE_KEYS.recorders, cleaned.length ? cleaned : ['1번']);
+  }
+
+  function renderRecorderChips(){
+    const list = getRecorderList();
+    el.recorderChipArea.innerHTML = '';
+
+    list.forEach(function(name){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = name === selectedRecorder ? 'active' : '';
+      btn.textContent = name;
+      btn.addEventListener('click', function(){
+        selectedRecorder = name;
+        renderRecorderChips();
+        queueAutoSave();
+        setStatus('기록자를 선택했습니다.', 'ok');
+      });
+      el.recorderChipArea.appendChild(btn);
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = '선택 기록자 삭제';
+    deleteBtn.addEventListener('click', function(){
+      if(!selectedRecorder){
+        setStatus('먼저 삭제할 기록자를 선택해 주세요.', 'warn');
+        return;
+      }
+      const next = getRecorderList().filter(function(name){
+        return name !== selectedRecorder;
+      });
+      saveRecorderList(next);
+      const refreshed = getRecorderList();
+      selectedRecorder = refreshed[0] || '';
+      renderRecorderChips();
+      queueAutoSave();
+      setStatus('선택한 기록자를 삭제했습니다.', 'ok');
+    });
+    el.recorderChipArea.appendChild(deleteBtn);
+  }
+
+  function addRecorder(){
+    const name = el.recorderInput.value.trim();
+    if(!name){
+      setStatus('추가할 기록자 이름을 입력해 주세요.', 'warn');
+      return;
+    }
+    const list = getRecorderList();
+    if(list.includes(name)){
+      selectedRecorder = name;
+      renderRecorderChips();
+      el.recorderInput.value = '';
+      setStatus('이미 있는 기록자입니다. 해당 기록자를 선택했습니다.', 'warn');
+      return;
+    }
+    list.push(name);
+    saveRecorderList(list);
+    selectedRecorder = name;
+    el.recorderInput.value = '';
+    renderRecorderChips();
+    queueAutoSave();
+    setStatus('기록자를 추가했습니다.', 'ok');
+  }
+
+  function createColorInput(value, onChange){
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = normalizeColor(value);
+    input.title = '글자색 선택';
+    input.addEventListener('input', onChange);
+    return input;
+  }
+
+  function createStudyCard(index, item){
+    const box = document.createElement('div');
+    box.className = 'item-box';
+    box.setAttribute('data-role', 'study-item');
+
+    const top = document.createElement('div');
+    top.className = 'item-top';
+
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = (index + 1) + '교시';
+
+    const actions = document.createElement('div');
+    actions.className = 'section-actions';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'danger';
+    deleteBtn.textContent = '삭제';
+    deleteBtn.addEventListener('click', function(){
+      if(el.studyContainer.children.length <= 1){
+        const ta = box.querySelector('textarea');
+        if(ta) ta.value = '';
+      }else{
+        box.remove();
+        renumberStudyCards();
+      }
+      handleInputChange();
+    });
+
+    actions.appendChild(deleteBtn);
+    top.appendChild(label);
+    top.appendChild(actions);
+
+    const controls = document.createElement('div');
+    controls.className = 'item-controls';
+
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = (index + 1) + '교시에 공부한 내용을 입력하세요.';
+    textarea.value = normalizeText(item.text);
+    textarea.addEventListener('input', handleInputChange);
+
+    const colorInput = createColorInput(item.color, handleInputChange);
+
+    controls.appendChild(textarea);
+    controls.appendChild(colorInput);
+
+    box.appendChild(top);
+    box.appendChild(controls);
+    return box;
+  }
+
+  function renumberStudyCards(){
+    Array.from(el.studyContainer.children).forEach(function(box, index){
+      const label = box.querySelector('.label');
+      const textarea = box.querySelector('textarea');
+      if(label) label.textContent = (index + 1) + '교시';
+      if(textarea) textarea.placeholder = (index + 1) + '교시에 공부한 내용을 입력하세요.';
+    });
+  }
+
+  function createListCard(type, index, item){
+    const box = document.createElement('div');
+    box.className = 'item-box';
+    box.setAttribute('data-role', 'list-item');
+
+    const top = document.createElement('div');
+    top.className = 'item-top';
+
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = getKoreanLabel(index) + '.';
+
+    const actions = document.createElement('div');
+    actions.className = 'section-actions';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'danger';
+    deleteBtn.textContent = '삭제';
+    deleteBtn.addEventListener('click', function(){
+      const container = type === 'homework' ? el.homeworkContainer : el.noticeContainer;
+      if(container.children.length <= 1){
+        const ta = box.querySelector('textarea');
+        if(ta) ta.value = '';
+      }else{
+        box.remove();
+        renumberListCards(type);
+      }
+      handleInputChange();
+    });
+
+    actions.appendChild(deleteBtn);
+    top.appendChild(label);
+    top.appendChild(actions);
+
+    const controls = document.createElement('div');
+    controls.className = 'item-controls';
+
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = type === 'homework' ? '과제 내용을 입력하세요.' : '안내 내용을 입력하세요.';
+    textarea.value = normalizeText(item.text);
+    textarea.addEventListener('input', handleInputChange);
+
+    const colorInput = createColorInput(item.color, handleInputChange);
+
+    controls.appendChild(textarea);
+    controls.appendChild(colorInput);
+
+    box.appendChild(top);
+    box.appendChild(controls);
+    return box;
+  }
+
+  function renumberListCards(type){
+    const container = type === 'homework' ? el.homeworkContainer : el.noticeContainer;
+    Array.from(container.children).forEach(function(box, index){
+      const label = box.querySelector('.label');
+      if(label) label.textContent = getKoreanLabel(index) + '.';
+    });
+  }
+
+  function fillValueOptions(selectedWord){
+    el.valueWord.innerHTML = '';
+    VALUE_DICTIONARY.forEach(function(item){
+      const option = document.createElement('option');
+      option.value = item.word;
+      option.textContent = item.word;
+      if(item.word === selectedWord) option.selected = true;
+      el.valueWord.appendChild(option);
+    });
+    updateValueDisplay();
+  }
+
+  function updateValueDisplay(){
+    const selected = VALUE_DICTIONARY.find(function(item){
+      return item.word === el.valueWord.value;
+    }) || VALUE_DICTIONARY[0];
+
+    el.valueMeaning.textContent = selected ? selected.meaning : '-';
+    el.valuePractice.textContent = selected ? selected.practice : '-';
+    buildPreviewBoard();
+    queueAutoSave();
+  }
+
+  function renderDraft(draft){
+    const normalized = normalizeDraft(draft);
+
+    el.hiddenDateKey.value = normalized.dateKey;
+    el.hiddenDateTitle.value = normalized.dateTitle;
+    el.chatTarget.value = normalized.chatTarget;
+    el.valueExtra.value = normalized.valueExtra;
+
+    selectedRecorder = normalized.recorder || getRecorderList()[0] || '';
+
+    el.studyContainer.innerHTML = '';
+    normalized.studies.forEach(function(item, index){
+      el.studyContainer.appendChild(createStudyCard(index, item));
+    });
+
+    el.homeworkContainer.innerHTML = '';
+    normalized.homework.forEach(function(item, index){
+      el.homeworkContainer.appendChild(createListCard('homework', index, item));
+    });
+
+    el.noticeContainer.innerHTML = '';
+    normalized.notices.forEach(function(item, index){
+      el.noticeContainer.appendChild(createListCard('notice', index, item));
+    });
+
+    fillValueOptions(normalized.valueWord);
+    renderRecorderChips();
+    buildPreviewBoard();
+  }
+
+  function getCurrentDraft(){
+    return {
+      dateKey: el.hiddenDateKey.value,
+      dateTitle: el.hiddenDateTitle.value,
+      chatTarget: el.chatTarget.value.trim(),
+      recorder: selectedRecorder,
+      studies: Array.from(el.studyContainer.querySelectorAll('[data-role="study-item"]')).map(function(box){
+        return {
+          text: normalizeText((box.querySelector('textarea') || {}).value).trim(),
+          color: normalizeColor((box.querySelector('input[type="color"]') || {}).value)
+        };
+      }),
+      homework: Array.from(el.homeworkContainer.querySelectorAll('[data-role="list-item"]')).map(function(box){
+        return {
+          text: normalizeText((box.querySelector('textarea') || {}).value).trim(),
+          color: normalizeColor((box.querySelector('input[type="color"]') || {}).value)
+        };
+      }),
+      notices: Array.from(el.noticeContainer.querySelectorAll('[data-role="list-item"]')).map(function(box){
+        return {
+          text: normalizeText((box.querySelector('textarea') || {}).value).trim(),
+          color: normalizeColor((box.querySelector('input[type="color"]') || {}).value)
+        };
+      }),
+      valueWord: el.valueWord.value,
+      valueExtra: el.valueExtra.value.trim()
+    };
+  }
+
+  function addStudyItem(){
+    el.studyContainer.appendChild(createStudyCard(el.studyContainer.children.length, { text:'', color:DEFAULT_TEXT_COLOR }));
+    renumberStudyCards();
+    handleInputChange();
+  }
+
+  function addListItem(type){
+    const container = type === 'homework' ? el.homeworkContainer : el.noticeContainer;
+    container.appendChild(createListCard(type, container.children.length, { text:'', color:DEFAULT_TEXT_COLOR }));
+    renumberListCards(type);
+    handleInputChange();
+  }
+
+  function hasAnyRealContent(draft){
+    return draft.studies.some(function(item){ return item.text; }) ||
+      draft.homework.some(function(item){ return item.text; }) ||
+      draft.notices.some(function(item){ return item.text; }) ||
+      Boolean(draft.valueExtra);
+  }
+
+  function buildPreviewBoardHtml(draft, showTitle){
+    const valueItem = VALUE_DICTIONARY.find(function(item){
+      return item.word === draft.valueWord;
+    });
+
+    const parts = [];
+
+    if(showTitle){
+      parts.push('<div class="chalk-title">' + escapeHtml(draft.dateTitle || '알림장') + '</div>');
+    }
+
+    parts.push('<div class="chalk-section"><div class="chalk-section-title">1. 오늘 공부한 내용</div>');
+    if(draft.studies.some(function(item){ return item.text; })){
+      draft.studies.forEach(function(item, index){
+        parts.push('<div class="chalk-line-item" style="color:' + escapeHtml(item.color || DEFAULT_TEXT_COLOR) + ';">- ' + (index + 1) + '교시: ' + escapeHtml(item.text || '(미입력)') + '</div>');
+      });
+    }else{
+      parts.push('<div class="chalk-line-item chalk-muted">- 없음</div>');
+    }
+    parts.push('</div>');
+
+    parts.push('<div class="chalk-section"><div class="chalk-section-title">2. 과제</div>');
+    if(draft.homework.some(function(item){ return item.text; })){
+      draft.homework.forEach(function(item, index){
+        parts.push('<div class="chalk-line-item" style="color:' + escapeHtml(item.color || DEFAULT_TEXT_COLOR) + ';">' + escapeHtml(getKoreanLabel(index)) + '. ' + escapeHtml(item.text || '(미입력)') + '</div>');
+      });
+    }else{
+      parts.push('<div class="chalk-line-item chalk-muted">- 없음</div>');
+    }
+    parts.push('</div>');
+
+    parts.push('<div class="chalk-section"><div class="chalk-section-title">3. 안내</div>');
+    if(draft.notices.some(function(item){ return item.text; })){
+      draft.notices.forEach(function(item, index){
+        parts.push('<div class="chalk-line-item" style="color:' + escapeHtml(item.color || DEFAULT_TEXT_COLOR) + ';">' + escapeHtml(getKoreanLabel(index)) + '. ' + escapeHtml(item.text || '(미입력)') + '</div>');
+      });
+    }else{
+      parts.push('<div class="chalk-line-item chalk-muted">- 없음</div>');
+    }
+    parts.push('</div>');
+
+    parts.push('<div class="chalk-section"><div class="chalk-section-title">4. 가치 사전</div>');
+    parts.push('<div class="chalk-line-item">- 가치 낱말: ' + escapeHtml(draft.valueWord || '-') + '</div>');
+    parts.push('<div class="chalk-line-item">- 뜻: ' + escapeHtml(valueItem ? valueItem.meaning : '-') + '</div>');
+    parts.push('<div class="chalk-line-item">- 실천 방법: ' + escapeHtml(valueItem ? valueItem.practice : '-') + '</div>');
+    if(draft.valueExtra){
+      parts.push('<div class="chalk-line-item">- 추가 메모: ' + escapeHtml(draft.valueExtra) + '</div>');
+    }
+    parts.push('</div>');
+
+    return parts.join('');
+  }
+
+  function buildPreviewBoard(){
+    const draft = getCurrentDraft();
+    el.previewBoard.innerHTML = buildPreviewBoardHtml(draft, false);
+  }
+
+  function queueAutoSave(){
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(function(){
+      const ok = writeStorage(STORAGE_KEYS.draft, normalizeDraft(getCurrentDraft()));
+      if(ok){
+        setStatus('자동 저장되었습니다.', 'ok');
+      }
+    }, 250);
+  }
+
+  function handleInputChange(){
+    buildPreviewBoard();
+    queueAutoSave();
+  }
+
+  function formatSavedAt(isoString){
+    const d = new Date(isoString);
+    if(Number.isNaN(d.getTime())) return '-';
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function getHistory(){
+    const data = readStorage(STORAGE_KEYS.history, []);
+    return Array.isArray(data) ? data : [];
+  }
+
+  function saveHistory(history){
+    return writeStorage(STORAGE_KEYS.history, history);
+  }
+
+  function saveCompletedDraft(draft){
+    const normalized = normalizeDraft(draft);
+    const savedAt = new Date().toISOString();
+
+    const entry = {
+      id: 'notice_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      savedAt: savedAt,
+      savedAtText: formatSavedAt(savedAt),
+      chatTarget: normalized.chatTarget,
+      recorder: normalized.recorder,
+      draft: normalized
+    };
+
+    const history = getHistory();
+    history.unshift(entry);
+
+    const okHistory = saveHistory(history);
+    const okDraft = writeStorage(STORAGE_KEYS.draft, normalized);
+
+    if(okHistory && okDraft){
+      renderHistory();
+      setStatus('완료 저장되었습니다.', 'ok');
+      return true;
+    }
+    return false;
+  }
+
+  function renderHistory(){
+    const history = getHistory();
+    el.historyList.innerHTML = '';
+
+    if(history.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = '아직 완료 저장한 알림장이 없습니다.';
+      el.historyList.appendChild(empty);
+      return;
+    }
+
+    history.forEach(function(item, index){
+      const card = document.createElement('div');
+      card.className = 'history-item';
+
+      const top = document.createElement('div');
+      top.className = 'history-top';
+
+      const left = document.createElement('div');
+      const title = document.createElement('div');
+      title.className = 'history-title';
+      title.textContent = '저장본 ' + (index + 1);
+      const meta = document.createElement('div');
+      meta.className = 'history-meta';
+      meta.textContent =
+        '저장 시각: ' + (item.savedAtText || '-') +
+        (item.chatTarget ? ' · 전송 대상: ' + item.chatTarget : '') +
+        (item.recorder ? ' · 기록자: ' + item.recorder : '');
+      left.appendChild(title);
+      left.appendChild(meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'section-actions';
+
+      const loadBtn = document.createElement('button');
+      loadBtn.type = 'button';
+      loadBtn.className = 'soft';
+      loadBtn.textContent = '불러오기';
+      loadBtn.addEventListener('click', function(){
+        renderDraft(item.draft);
+        writeStorage(STORAGE_KEYS.draft, normalizeDraft(item.draft));
+        setStatus('저장본을 불러왔습니다.', 'ok');
+      });
+
+      const previewBtn = document.createElement('button');
+      previewBtn.type = 'button';
+      previewBtn.className = 'ghost';
+      previewBtn.textContent = '이미지 확인';
+      previewBtn.addEventListener('click', async function(){
+        await openPreviewModal(item.draft, 'history');
+      });
+
+      const downloadBtn = document.createElement('button');
+      downloadBtn.type = 'button';
+      downloadBtn.className = 'ghost';
+      downloadBtn.textContent = '이미지 저장';
+      downloadBtn.addEventListener('click', async function(){
+        await downloadDraftImage(item.draft);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'danger';
+      deleteBtn.textContent = '삭제';
+      deleteBtn.addEventListener('click', function(){
+        const next = getHistory().filter(function(historyItem){
+          return historyItem.id !== item.id;
+        });
+        if(saveHistory(next)){
+          renderHistory();
+          setStatus('저장 목록에서 삭제했습니다.', 'ok');
+        }
+      });
+
+      actions.appendChild(loadBtn);
+      actions.appendChild(previewBtn);
+      actions.appendChild(downloadBtn);
+      actions.appendChild(deleteBtn);
+
+      top.appendChild(left);
+      top.appendChild(actions);
+
+      const snippet = document.createElement('div');
+      snippet.className = 'history-snippet';
+      snippet.textContent = buildPlainTextPreview(item.draft);
+
+      card.appendChild(top);
+      card.appendChild(snippet);
+      el.historyList.appendChild(card);
+    });
+  }
+
+  function buildPlainTextPreview(draft){
+    const valueItem = VALUE_DICTIONARY.find(function(item){
+      return item.word === draft.valueWord;
+    });
+
+    const lines = [];
+    lines.push(draft.dateTitle || '알림장');
+    lines.push('');
+    lines.push('1. 오늘 공부한 내용');
+    if(draft.studies.some(function(item){ return item.text; })){
+      draft.studies.forEach(function(item, index){
+        lines.push('- ' + (index + 1) + '교시: ' + item.text);
+      });
+    }else{
+      lines.push('- 없음');
+    }
+
+    lines.push('');
+    lines.push('2. 과제');
+    if(draft.homework.some(function(item){ return item.text; })){
+      draft.homework.forEach(function(item, index){
+        lines.push(getKoreanLabel(index) + '. ' + item.text);
+      });
+    }else{
+      lines.push('- 없음');
+    }
+
+    lines.push('');
+    lines.push('3. 안내');
+    if(draft.notices.some(function(item){ return item.text; })){
+      draft.notices.forEach(function(item, index){
+        lines.push(getKoreanLabel(index) + '. ' + item.text);
+      });
+    }else{
+      lines.push('- 없음');
+    }
+
+    lines.push('');
+    lines.push('4. 가치 사전');
+    lines.push('- 가치 낱말: ' + (draft.valueWord || '-'));
+    lines.push('- 뜻: ' + (valueItem ? valueItem.meaning : '-'));
+    lines.push('- 실천 방법: ' + (valueItem ? valueItem.practice : '-'));
+    if(draft.valueExtra){
+      lines.push('- 추가 메모: ' + draft.valueExtra);
+    }
+    return lines.join('\n');
+  }
+
+  /* =========================
+     칠판 PNG 생성
+     ========================= */
+
+  function splitTextToLines(ctx, text, maxWidth){
+    const source = String(text || '').replace(/\r/g, '');
+    const paragraphs = source.split('\n');
+    const lines = [];
+
+    paragraphs.forEach(function(paragraph, pIndex){
+      if(paragraph === ''){
+        lines.push('');
+        return;
+      }
+      let current = '';
+      for(let i=0; i<paragraph.length; i++){
+        const test = current + paragraph[i];
+        if(ctx.measureText(test).width <= maxWidth){
+          current = test;
+        }else{
+          if(current){
+            lines.push(current);
+            current = paragraph[i];
+          }else{
+            lines.push(paragraph[i]);
+            current = '';
+          }
+        }
+      }
+      if(current) lines.push(current);
+      if(pIndex < paragraphs.length - 1) lines.push('');
+    });
+
+    return lines.length ? lines : [''];
+  }
+
+  function buildCanvasLayout(ctx, draft, options){
+    const width = options.width;
+    const padX = 72;
+    const padY = 76;
+    const usableWidth = width - padX * 2;
+    const blocks = [];
+
+    function addSpace(height){
+      blocks.push({ type:'space', height:height });
+    }
+
+    function addWrappedBlock(text, font, color, lineHeight, extraSpaceAfter){
+      ctx.font = font;
+      splitTextToLines(ctx, text, usableWidth).forEach(function(line){
+        blocks.push({
+          type:'text',
+          text: line,
+          font: font,
+          color: color,
+          lineHeight: lineHeight
+        });
+      });
+      addSpace(extraSpaceAfter || 0);
+    }
+
+    const valueItem = VALUE_DICTIONARY.find(function(item){
+      return item.word === draft.valueWord;
+    });
+
+    if(options.showTitle){
+      addWrappedBlock(draft.dateTitle || '알림장', '700 52px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 66, 20);
+    }
+
+    addWrappedBlock('1. 오늘 공부한 내용', '700 40px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 52, 8);
+    if(draft.studies.some(function(item){ return item.text; })){
+      draft.studies.forEach(function(item, index){
+        addWrappedBlock('- ' + (index + 1) + '교시: ' + (item.text || '(미입력)'), '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', item.color || DEFAULT_TEXT_COLOR, 44, 4);
+      });
+    }else{
+      addWrappedBlock('- 없음', '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 44, 4);
+    }
+
+    addSpace(14);
+    addWrappedBlock('2. 과제', '700 40px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 52, 8);
+    if(draft.homework.some(function(item){ return item.text; })){
+      draft.homework.forEach(function(item, index){
+        addWrappedBlock(getKoreanLabel(index) + '. ' + (item.text || '(미입력)'), '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', item.color || DEFAULT_TEXT_COLOR, 44, 4);
+      });
+    }else{
+      addWrappedBlock('- 없음', '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 44, 4);
+    }
+
+    addSpace(14);
+    addWrappedBlock('3. 안내', '700 40px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 52, 8);
+    if(draft.notices.some(function(item){ return item.text; })){
+      draft.notices.forEach(function(item, index){
+        addWrappedBlock(getKoreanLabel(index) + '. ' + (item.text || '(미입력)'), '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', item.color || DEFAULT_TEXT_COLOR, 44, 4);
+      });
+    }else{
+      addWrappedBlock('- 없음', '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 44, 4);
+    }
+
+    addSpace(14);
+    addWrappedBlock('4. 가치 사전', '700 40px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 52, 8);
+    addWrappedBlock('- 가치 낱말: ' + (draft.valueWord || '-'), '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 44, 4);
+    addWrappedBlock('- 뜻: ' + (valueItem ? valueItem.meaning : '-'), '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 44, 4);
+    addWrappedBlock('- 실천 방법: ' + (valueItem ? valueItem.practice : '-'), '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 44, 4);
+    if(draft.valueExtra){
+      addWrappedBlock('- 추가 메모: ' + draft.valueExtra, '400 32px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', '#ffffff', 44, 4);
+    }
+
+    addSpace(16);
+    addWrappedBlock('© 2026 남현정. All rights reserved.', '400 22px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', 'rgba(255,255,255,.86)', 30, 0);
+
+    const totalHeight = blocks.reduce(function(sum, block){
+      if(block.type === 'text') return sum + block.lineHeight;
+      return sum + block.height;
+    }, 0);
+
+    const finalHeight = Math.max(980, padY * 2 + totalHeight);
+
+    return {
+      width: width,
+      height: finalHeight,
+      padX: padX,
+      padY: padY,
+      blocks: blocks
+    };
+  }
+
+  function drawChalkBackground(ctx, width, height){
+    ctx.fillStyle = '#1d4b42';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.strokeStyle = 'rgba(255,255,255,.06)';
+    ctx.lineWidth = 2;
+    for(let y=40; y<height; y+=34){
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+
+    // 가벼운 칠판 질감
+    for(let i=0; i<80; i++){
+      const x = Math.random() * width;
+      const y = Math.random() * height;
+      const r = 10 + Math.random() * 36;
+      const alpha = 0.015 + Math.random() * 0.02;
+      ctx.fillStyle = 'rgba(255,255,255,' + alpha.toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(18, 18, width - 36, height - 36);
+  }
+
+  function generateCanvasFromDraft(draft, showTitle){
+    const normalized = normalizeDraft(draft);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const tempWidth = 1400;
+    canvas.width = tempWidth;
+    canvas.height = 1200;
+
+    const layout = buildCanvasLayout(ctx, normalized, {
+      width: tempWidth,
+      showTitle: !!showTitle
+    });
+
+    canvas.width = layout.width;
+    canvas.height = layout.height;
+
+    drawChalkBackground(ctx, canvas.width, canvas.height);
+
+    let x = layout.padX;
+    let y = layout.padY;
+
+    ctx.textBaseline = 'top';
+    layout.blocks.forEach(function(block){
+      if(block.type === 'space'){
+        y += block.height;
+        return;
+      }
+      ctx.font = block.font;
+      ctx.fillStyle = block.color;
+      ctx.fillText(block.text, x, y);
+      y += block.lineHeight;
+    });
+
+    return canvas;
+  }
+
+  function canvasToBlob(canvas){
+    return new Promise(function(resolve, reject){
+      canvas.toBlob(function(blob){
+        if(blob) resolve(blob);
+        else reject(new Error('이미지 생성 실패'));
+      }, 'image/png');
+    });
+  }
+
+  function getDraftFileName(draft){
+    const dateKey = normalizeText(draft.dateKey).replace(/[^\d-]/g, '') || 'notice';
+    return 'today_notice_' + dateKey + '.png';
+  }
+
+  async function getImageBlobAndUrl(draft){
+    const canvas = generateCanvasFromDraft(draft, true);
+    const blob = await canvasToBlob(canvas);
+    const url = URL.createObjectURL(blob);
+    return { blob, url };
+  }
+
+  function revokeModalObjectUrl(){
+    if(modalObjectUrl){
+      URL.revokeObjectURL(modalObjectUrl);
+      modalObjectUrl = '';
+    }
+  }
+
+  async function refreshModalImage(draft){
+    revokeModalObjectUrl();
+    const result = await getImageBlobAndUrl(draft);
+    modalObjectUrl = result.url;
+    el.modalImage.src = modalObjectUrl;
+    return result.blob;
+  }
+
+  async function openPreviewModal(draft, mode){
+    modalDraftCache = normalizeDraft(draft);
+    modalMode = mode || 'current';
+    el.modalSaveBtn.style.display = modalMode === 'current' ? '' : 'none';
+    el.previewModal.classList.add('open');
+    el.previewModal.setAttribute('aria-hidden', 'false');
+
+    try{
+      await refreshModalImage(modalDraftCache);
+      setStatus('이미지를 생성했습니다.', 'ok');
+    }catch(error){
+      setStatus('이미지 생성에 실패했습니다.', 'error');
+    }
+  }
+
+  function closePreviewModal(){
+    modalDraftCache = null;
+    modalMode = 'current';
+    el.previewModal.classList.remove('open');
+    el.previewModal.setAttribute('aria-hidden', 'true');
+    revokeModalObjectUrl();
+    el.modalImage.removeAttribute('src');
+  }
+
+  async function downloadDraftImage(draft){
+    try{
+      const canvas = generateCanvasFromDraft(draft, true);
+      const blob = await canvasToBlob(canvas);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = getDraftFileName(draft);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus('PNG 이미지를 저장했습니다.', 'ok');
+      return true;
+    }catch(error){
+      setStatus('이미지 저장에 실패했습니다.', 'error');
+      return false;
+    }
+  }
+
+  async function shareDraftImage(draft){
+    try{
+      const canvas = generateCanvasFromDraft(draft, true);
+      const blob = await canvasToBlob(canvas);
+      const file = new File([blob], getDraftFileName(draft), { type:'image/png' });
+
+      if(navigator.canShare && navigator.canShare({ files:[file] }) && navigator.share){
+        await navigator.share({
+          files:[file],
+          title: draft.dateTitle || '오늘 알림장'
+        });
+        setStatus('공유창을 열었습니다. 카카오톡을 선택해 주세요.', 'ok');
+        return true;
+      }
+
+      await downloadDraftImage(draft);
+      setStatus('이 환경에서는 이미지 직접 공유가 어려워 PNG 저장으로 대신했습니다.', 'warn');
+      return false;
+    }catch(error){
+      if(error && error.name === 'AbortError'){
+        setStatus('공유가 취소되었습니다.', 'warn');
+        return false;
+      }
+      const downloaded = await downloadDraftImage(draft);
+      if(downloaded){
+        setStatus('공유 대신 PNG로 저장했습니다.', 'warn');
+      }
+      return false;
+    }
+  }
+
+  function resetDraft(){
+    const fresh = defaultDraft();
+    renderDraft(fresh);
+    writeStorage(STORAGE_KEYS.draft, fresh);
+    setStatus('새 알림장으로 초기화했습니다.', 'ok');
+  }
+
+  function loadInitialDraft(){
+    const currentAuto = getAutoDateMeta();
+    const stored = normalizeDraft(readStorage(STORAGE_KEYS.draft, defaultDraft()));
+
+    if(stored.dateKey === currentAuto.dateKey){
+      renderDraft(stored);
+    }else{
+      const fresh = defaultDraft();
+      fresh.dateKey = currentAuto.dateKey;
+      fresh.dateTitle = currentAuto.dateTitle;
+      renderDraft(fresh);
+      writeStorage(STORAGE_KEYS.draft, fresh);
+    }
+  }
+
+  function bindEvents(){
+    el.chatTarget.addEventListener('input', handleInputChange);
+    el.valueExtra.addEventListener('input', handleInputChange);
+    el.valueWord.addEventListener('change', updateValueDisplay);
+
+    el.addRecorderBtn.addEventListener('click', addRecorder);
+    el.recorderInput.addEventListener('keydown', function(event){
+      if(event.key === 'Enter'){
+        event.preventDefault();
+        addRecorder();
+      }
+    });
+
+    el.addStudyBtn.addEventListener('click', addStudyItem);
+    el.addHomeworkBtn.addEventListener('click', function(){ addListItem('homework'); });
+    el.addNoticeBtn.addEventListener('click', function(){ addListItem('notice'); });
+    el.resetBtn.addEventListener('click', resetDraft);
+
+    el.quickDownloadBtn.addEventListener('click', async function(){
+      const draft = getCurrentDraft();
+      if(!hasAnyRealContent(draft)){
+        setStatus('내용을 입력한 뒤 이미지를 저장해 주세요.', 'warn');
+        return;
+      }
+      await downloadDraftImage(draft);
+    });
+
+    el.quickShareBtn.addEventListener('click', async function(){
+      const draft = getCurrentDraft();
+      if(!hasAnyRealContent(draft)){
+        setStatus('내용을 입력한 뒤 이미지를 공유해 주세요.', 'warn');
+        return;
+      }
+      await shareDraftImage(draft);
+    });
+
+    el.completeBtn.addEventListener('click', async function(){
+      const draft = getCurrentDraft();
+      if(!hasAnyRealContent(draft)){
+        setStatus('비어 있는 상태입니다. 한 가지 이상 입력한 뒤 완료해 주세요.', 'warn');
+        return;
+      }
+      await openPreviewModal(draft, 'current');
+    });
+
+    el.modalCloseBtn.addEventListener('click', closePreviewModal);
+
+    el.modalDownloadBtn.addEventListener('click', async function(){
+      if(!modalDraftCache){
+        setStatus('저장할 이미지가 없습니다.', 'warn');
+        return;
+      }
+      await downloadDraftImage(modalDraftCache);
+    });
+
+    el.modalShareBtn.addEventListener('click', async function(){
+      if(!modalDraftCache){
+        setStatus('공유할 이미지가 없습니다.', 'warn');
+        return;
+      }
+      await shareDraftImage(modalDraftCache);
+    });
+
+    el.modalSaveBtn.addEventListener('click', function(){
+      if(!modalDraftCache){
+        setStatus('저장할 내용이 없습니다.', 'warn');
+        return;
+      }
+      const saved = saveCompletedDraft(modalDraftCache);
+      if(saved){
+        closePreviewModal();
+      }
+    });
+
+    el.previewModal.addEventListener('click', function(event){
+      if(event.target === el.previewModal){
+        closePreviewModal();
+      }
+    });
+
+    document.addEventListener('keydown', function(event){
+      if(event.key === 'Escape' && el.previewModal.classList.contains('open')){
+        closePreviewModal();
+      }
+    });
+  }
+
+  function init(){
+    renderRecorderChips();
+    bindEvents();
+    loadInitialDraft();
+    renderHistory();
+    setStatus('준비가 완료되었습니다.', 'ok');
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
